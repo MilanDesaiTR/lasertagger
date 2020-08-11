@@ -279,8 +279,11 @@ def main(_):
         is_training=False,
         drop_remainder=eval_drop_remainder)
 
-    for ckpt in tf.contrib.training.checkpoints_iterator(
-        FLAGS.output_dir, timeout=FLAGS.eval_timeout):
+    state = tf.train.get_checkpoint_state
+    paths_and_timestamps = zip(state.all_model_checkpoint_paths, state.all_model_checkpoint_timestamps)
+    paths = map(lambda pt: pt[0], sorted(paths_and_timestamps, key=lambda pt: pt[1]))
+
+    for ckpt in paths:
       result = estimator.evaluate(input_fn=eval_input_fn, checkpoint_path=ckpt,
                                   steps=eval_steps)
       for key in sorted(result):

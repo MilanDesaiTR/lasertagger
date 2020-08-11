@@ -17,6 +17,7 @@
 OPTIMIZE=0
 PREPROCESS=0
 TRAIN=0
+VALIDATE=0
 EXPORT=0
 PREDICT=0
 SCORE=0
@@ -31,13 +32,16 @@ then
 	SCORE=1
 elif [ "$1" = "optimize" ]
 then
-	OPTIMIZE=1
+    OPTIMIZE=1
 elif [ "$1" = "preprocess" ]
 then
     PREPROCESS=1
 elif [ "$1" = "train" ]
 then
     TRAIN=1
+elif [ "$1" = "validate" ]
+then
+    VALIDATE=1
 elif [ "$1" = "export" ]
 then
     EXPORT=1
@@ -118,10 +122,17 @@ fi
 
 CONFIG_FILE=./configs/lasertagger_config.json
 
-if [ $TRAIN -eq 1 ]
+if [ $TRAIN -eq 1 ] || [ $VALIDATE -eq 1 ]
 then
 	NUM_TRAIN_EXAMPLES=$(cat "${OUTPUT_DIR}/train.tf_record.num_examples.txt")
 	NUM_EVAL_EXAMPLES=$(cat "${OUTPUT_DIR}/tune.tf_record.num_examples.txt")
+
+	DO_TRAIN=false
+	if [ $TRAIN -eq 1 ]
+	then
+	  DO_TRAIN=true
+	fi
+
 	python run_lasertagger.py \
 		--training_file=${OUTPUT_DIR}/train.tf_record \
 		--eval_file=${OUTPUT_DIR}/tune.tf_record \
@@ -129,7 +140,7 @@ then
 		--model_config_file=${CONFIG_FILE} \
 		--output_dir=${OUTPUT_DIR}/models/${EXPERIMENT} \
 		--init_checkpoint=${BERT_BASE_DIR}/bert_model.ckpt \
-		--do_train=true \
+		--do_train=${DO_TRAIN} \
 		--do_eval=true \
 		--train_batch_size=${BATCH_SIZE} \
 		--save_checkpoints_steps=${SAVE_CHECKPOINT_STEPS} \
