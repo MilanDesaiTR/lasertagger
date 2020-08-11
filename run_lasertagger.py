@@ -29,6 +29,15 @@ import utils
 
 import tensorflow as tf
 
+from tensorflow.python.util import deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+
+try:
+  from tensorflow.python.util import module_wrapper as deprecation
+except ImportError:
+  from tensorflow.python.util import deprecation_wrapper as deprecation
+deprecation._PER_MODULE_WARNING_LIMIT = 0
+
 FLAGS = flags.FLAGS
 
 ## Required parameters
@@ -214,8 +223,7 @@ def main(_):
       tpu_config=tf.contrib.tpu.TPUConfig(
           iterations_per_loop=FLAGS.iterations_per_loop,
           per_host_input_for_training=is_per_host,
-          eval_training_input_configuration=tf.contrib.tpu.InputPipelineConfig
-          .SLICED))
+          eval_training_input_configuration=tf.contrib.tpu.InputPipelineConfig.PER_HOST_V1))
 
   if FLAGS.do_train:
     num_train_steps, num_warmup_steps = _calculate_steps(
