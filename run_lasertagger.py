@@ -279,15 +279,14 @@ def main(_):
         is_training=False,
         drop_remainder=eval_drop_remainder)
 
-    state = tf.train.get_checkpoint_state
-    paths_and_timestamps = zip(state.all_model_checkpoint_paths, state.all_model_checkpoint_timestamps)
-    paths = map(lambda pt: pt[0], sorted(paths_and_timestamps, key=lambda pt: pt[1]))
-
-    for ckpt in paths:
-      result = estimator.evaluate(input_fn=eval_input_fn, checkpoint_path=ckpt,
-                                  steps=eval_steps)
-      for key in sorted(result):
-        tf.logging.info("  %s = %s", key, str(result[key]))
+    state = tf.train.get_checkpoint_state(FLAGS.output_dir)
+    with open('out/validation_results.out', 'w') as f:
+        for ckpt in state.all_model_checkpoint_paths:
+          result = estimator.evaluate(input_fn=eval_input_fn, checkpoint_path=ckpt, steps=eval_steps)
+          for key in sorted(result):
+            f.write(f'{key} = {result[key]}\n')
+            f.flush()
+            tf.logging.info("  %s = %s", key, str(result[key]))
 
   if FLAGS.do_export:
     tf.logging.info("Exporting the model...")
