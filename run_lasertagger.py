@@ -219,7 +219,7 @@ def main(_):
       master=FLAGS.master,
       model_dir=FLAGS.output_dir,
       save_checkpoints_steps=FLAGS.save_checkpoints_steps,
-      keep_checkpoint_max=20,
+      keep_checkpoint_max=100,
       tpu_config=tf.contrib.tpu.TPUConfig(
           iterations_per_loop=FLAGS.iterations_per_loop,
           per_host_input_for_training=is_per_host,

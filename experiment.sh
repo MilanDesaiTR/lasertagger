@@ -57,7 +57,7 @@ fi
 
 # Download the WikiSplit data from:
 # https://github.com/google-research-datasets/wiki-split
-WIKISPLIT_DIR=~/sec_letter_annotations
+WIKISPLIT_DIR=data
 # Preprocessed data and models will be stored here.
 OUTPUT_DIR=out
 # Download the pretrained BERT model:
@@ -70,7 +70,7 @@ BERT_BASE_DIR=~/cased_L-12_H-768_A-12
 EXPERIMENT=sec_letter_experiment
 # To quickly test that model training works, set the number of epochs to a
 # smaller value (e.g. 0.01).
-NUM_EPOCHS=1000
+NUM_EPOCHS=50
 BATCH_SIZE=4
 PHRASE_VOCAB_SIZE=500
 MAX_INPUT_EXAMPLES=1000000
