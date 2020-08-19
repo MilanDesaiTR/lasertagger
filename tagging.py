@@ -26,7 +26,6 @@ from __future__ import division
 from __future__ import print_function
 
 from enum import Enum
-from typing import Sequence, Text
 
 import utils
 
@@ -89,7 +88,6 @@ class EditingTask(object):
   Attributes:
     sources: Source texts.
     source_tokens: Tokens of the source texts concatenated into a single list.
-    first_tokens: The indices of the first tokens of each source text.
   """
 
   def __init__(self, sources):
@@ -100,15 +98,7 @@ class EditingTask(object):
         for sentence fusion it contains two strings to be fused (whose order may
         be swapped).
     """
-    self.sources = sources
-    source_token_lists = [utils.get_token_list(text) for text in self.sources]
-    # Tokens of the source texts concatenated into a single list.
-    self.source_tokens = []
-    # The indices of the first tokens of each source text.
-    self.first_tokens = []
-    for token_list in source_token_lists:
-      self.first_tokens.append(len(self.source_tokens))
-      self.source_tokens.extend(token_list)
+    self.source_tokens = utils.get_token_list(sources[0])
 
   def _realize_sequence(self, tokens, tags):
     """Realizes output text corresponding to a single source text.
@@ -124,23 +114,9 @@ class EditingTask(object):
     for token, tag in zip(tokens, tags):
       if tag.added_phrase:
         output_tokens.append(tag.added_phrase)
-      if tag.tag_type in (TagType.KEEP, TagType.SWAP):
+      if tag.tag_type == TagType.KEEP:
         output_tokens.append(token)
     return ' '.join(output_tokens)
-
-  def _first_char_to_upper(self, text):
-    """Upcases the first character of the text."""
-    try:
-      return text[0].upper() + text[1:]
-    except IndexError:
-      return text
-
-  def _first_char_to_lower(self, text):
-    """Lowcases the first character of the text."""
-    try:
-      return text[0].lower() + text[1:]
-    except IndexError:
-      return text
 
   def realize_output(self, tags):
     """Realize output text based on the source tokens and predicted tags.
@@ -159,30 +135,5 @@ class EditingTask(object):
       raise ValueError('The number of tags ({}) should match the number of '
                        'source tokens ({})'.format(
                            len(tags), len(self.source_tokens)))
-    outputs = []  # Realized sources that are joined into the output text.
-    if (len(self.first_tokens) == 2 and
-        tags[self.first_tokens[1] - 1].tag_type == TagType.SWAP):
-      order = [1, 0]
-    else:
-      order = range(len(self.first_tokens))
-
-    for source_idx in order:
-      # Get the span of tokens for the source: [first_token, last_token).
-      first_token = self.first_tokens[source_idx]
-      if source_idx + 1 < len(self.first_tokens):
-        last_token = self.first_tokens[source_idx + 1]  # Not inclusive.
-      else:
-        last_token = len(self.source_tokens)
-      # Realize the source and fix casing.
-      realized_source = self._realize_sequence(
-          self.source_tokens[first_token:last_token],
-          tags[first_token:last_token])
-      if outputs:
-        if outputs[0][-1:] in '.!?':
-          realized_source = self._first_char_to_upper(realized_source)
-        else:
-          # Note that ideally we should also test here whether the first word is
-          # a proper noun or an abbreviation that should always be capitalized.
-          realized_source = self._first_char_to_lower(realized_source)
-      outputs.append(realized_source)
-    return ' '.join(outputs)
+    # Realize the source and fix casing.
+    return self._realize_sequence(self.source_tokens, tags)
