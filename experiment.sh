@@ -70,11 +70,11 @@ BERT_BASE_DIR=~/cased_L-12_H-768_A-12
 EXPERIMENT=sec_letter_experiment
 # To quickly test that model training works, set the number of epochs to a
 # smaller value (e.g. 0.01).
-NUM_EPOCHS=50
+NUM_EPOCHS=20
 BATCH_SIZE=4
 PHRASE_VOCAB_SIZE=500
 MAX_INPUT_EXAMPLES=1000000
-SAVE_CHECKPOINT_STEPS=231
+SAVE_CHECKPOINT_STEPS=258
 MAX_SEQ_LENGTH=512
 
 ###########################
@@ -161,7 +161,8 @@ then
 		--model_config_file=${CONFIG_FILE} \
 		--output_dir=${OUTPUT_DIR}/models/${EXPERIMENT} \
 		--do_export=true \
-		--export_path=${OUTPUT_DIR}/models/${EXPERIMENT}/export
+		--export_path=${OUTPUT_DIR}/models/${EXPERIMENT}/export \
+	        --init_checkpoint=${OUTPUT_DIR}/models/${EXPERIMENT}/model.ckpt-3612
 fi
 
 PREDICTION_FILE=${OUTPUT_DIR}/models/${EXPERIMENT}/pred.tsv

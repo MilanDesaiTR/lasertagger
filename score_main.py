@@ -55,7 +55,7 @@ def main(argv):
   logging.info(f'Read file: {FLAGS.prediction_file}')
   exact = score_lib.compute_exact_score(predictions, target_lists)
   sari, keep, addition, deletion = score_lib.compute_sari_scores(
-      sources, predictions, target_lists)
+      sources, predictions, target_lists, ignore_wikisplit_separators=False)
   print(f'Exact score:     {100*exact:.3f}')
   print(f'SARI score:      {100*sari:.3f}')
   print(f' KEEP score:     {100*keep:.3f}')

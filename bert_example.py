@@ -166,6 +166,9 @@ class BertExampleBuilder(object):
     tokens, labels, token_start_indices = self._split_to_wordpieces(
         task.source_tokens, labels)
 
+    if len(tokens) > 510:
+        print(f'FINDME: {len(tokens)} tokens')
+
     tokens = self._truncate_list(tokens)
     labels = self._truncate_list(labels)
 
