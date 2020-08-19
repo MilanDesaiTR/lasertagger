@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2019 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
+### Required parameters (modify before calling the script!) ###
+
+NUM_EPOCHS=20
+EXPORT_CHECKPOINT=0
+BATCH_SIZE=4
+PHRASE_VOCAB_SIZE=500
+MAX_INPUT_EXAMPLES=1000000
+SAVE_CHECKPOINT_STEPS=258
+MAX_SEQ_LENGTH=512
+
+# Download the WikiSplit data from:
+# https://github.com/google-research-datasets/wiki-split
+WIKISPLIT_DIR=data
+# Preprocessed data and models will be stored here.
+OUTPUT_DIR=out
+# Download the pretrained BERT model:
+# https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip
+BERT_BASE_DIR=~/cased_L-12_H-768_A-12
+
+### Optional parameters ###
+
+# If you train multiple models on the same data, change this label.
+EXPERIMENT=sec_letter_experiment
+
+
+###########################
 
 OPTIMIZE=0
 PREPROCESS=0
@@ -52,33 +79,6 @@ elif [ "$1" = "score" ]
 then
     SCORE=1
 fi
-
-### Required parameters (modify before calling the script!) ###
-
-# Download the WikiSplit data from:
-# https://github.com/google-research-datasets/wiki-split
-WIKISPLIT_DIR=data
-# Preprocessed data and models will be stored here.
-OUTPUT_DIR=out
-# Download the pretrained BERT model:
-# https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip
-BERT_BASE_DIR=~/cased_L-12_H-768_A-12
-
-### Optional parameters ###
-
-# If you train multiple models on the same data, change this label.
-EXPERIMENT=sec_letter_experiment
-# To quickly test that model training works, set the number of epochs to a
-# smaller value (e.g. 0.01).
-NUM_EPOCHS=20
-BATCH_SIZE=4
-PHRASE_VOCAB_SIZE=500
-MAX_INPUT_EXAMPLES=1000000
-SAVE_CHECKPOINT_STEPS=258
-MAX_SEQ_LENGTH=512
-
-###########################
-
 
 ### 1. Phrase Vocabulary Optimization
 
@@ -162,7 +162,7 @@ then
 		--output_dir=${OUTPUT_DIR}/models/${EXPERIMENT} \
 		--do_export=true \
 		--export_path=${OUTPUT_DIR}/models/${EXPERIMENT}/export \
-	        --init_checkpoint=${OUTPUT_DIR}/models/${EXPERIMENT}/model.ckpt-3612
+    --init_checkpoint=${OUTPUT_DIR}/models/${EXPERIMENT}/model.ckpt-${EXPORT_CHECKPOINT}
 fi
 
 PREDICTION_FILE=${OUTPUT_DIR}/models/${EXPERIMENT}/pred.tsv
