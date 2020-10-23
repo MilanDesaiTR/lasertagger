@@ -1,0 +1,67 @@
+These instructions specify how to setup the EC2 instance to install lasertagger, and then how to run training/testing in conjunction with the sec-letters repository.
+
+Author: Milan Desai
+Updated: 10/23/2020
+
+
+PART 1: EC2 SETUP INSTRUCTIONS
+
+Because lasertagger uses an older version of tensorflow, we need to install CUDA 10.0 and the compatible versions of GCC and CuDNN.
+Except where indicated, all steps can be run on non-GPU instance.
+G4 instances are NOT supported by this NVIDIA driver version.
+P2 instances work fine.
+
+CUDA:
+sudo yum install gcc
+sudo yum install kernel-devel-$(uname -r) kernel-headers-$(uname -r)
+wget https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux
+sudo sh cuda_10.0.130_410.48_linux [RUN ON GPU INSTANCE]
+Update ~/.bash_profile:
+	- PATH=$PATH:/usr/local/cuda/bin
+	- export LD_LIBRARY_PATH=/usr/local/cuda/lib64
+source ~/.bash_profile
+
+CuDNN:
+aws s3 cp s3://a204311-scw-use1-secletter/cudnn-10.0-linux-x64-v7.6.5.32.tgz .
+tar xf cudnn-10.0-linux-x64-v7.6.5.32.tgz
+sudo chown -R root:root cuda
+sudo cp -R cuda/* /usr/local/cuda
+
+Conda:
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+conda create --name lasertagger python=3.7
+conda activate lasertagger
+
+Lasertagger:
+wget https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip
+unzip -q unzip -q cased_L-12_H-768_A-12.zip
+git clone https://github.com/MilanDesaiTR/lasertagger.git
+cd lasertagger
+pip install -r requirements.txt
+
+
+PART 2: TRAINING/TESTING INSTRUCTIONS
+
+1. From the sec-letters repository, run the lasertagger/generate_examples.py script. Copy the resulting train.tsv and validation.tsv to the data directory. Also copy validation.tsv to tune.tsv. There should be three .tsv files in the data directory now.
+
+2. Modify experiment.sh to control the number of epochs to train for, the specific model checkpoint to export, the batch size, and the checkpoint frequency. With 1040 training examples and a batch size of 4, then to create a checkpoint every epoch, the SAVE_CHECKPOINT_STEPS value gets set to 1040/4 = 260.
+
+3. Run experiment.sh <COMMAND>. The Possible values for <COMMAND> are:
+	optimize : this command should not be run (it generates a label_map.txt with the list of possible labels, which is fixed and already created for our problem in this repo)
+
+	preprocess : converts the train.tsv/tune.tsv/validation.tsv files into tensorflow format
+
+	train : runs training for the configured number of epochs
+
+	validate : skips training and prints only the validation results
+
+	export : exports the model number specified in the configuration
+
+	predict : generates the predictions in out/pred.tsv file based on data/test.tsv for the exported model
+
+	score : outputs metrics/scores on the prediction results
+
+	These commands should be run in order: preprocess, then train, then validate, then export, then predict, then score.
+
+4. The prediction results and models are stored in the out directory. out/pred.tsv can be placed in the lasertagger/resources directory of the sec-letters repository, and then used by model/lasertagger_model.py for calculating precision/recall in the same way as the other models.
